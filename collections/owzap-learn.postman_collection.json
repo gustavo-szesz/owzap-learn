@@ -1,0 +1,344 @@
+{
+  "info": {
+    "_postman_id": "owzap-learn-collection",
+    "name": "owzap-learn — API Lab",
+    "description": "Coleção para o laboratório OWASP ZAP. Configure o proxy do Postman para localhost:8090 antes de usar.\n\nDocumentação: https://github.com/gustavo-szesz/owzap-learn",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 - Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": [""]
+        },
+        "description": "Verifica se a API está no ar e lista os endpoints disponíveis."
+      }
+    },
+    {
+      "name": "02 - Login (credenciais validas)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if (json.token) {",
+              "    pm.collectionVariables.set('jwt_token', json.token);",
+              "    console.log('Token salvo:', json.token.substring(0, 20) + '...');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"admin\", \"password\": \"admin\"}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["login"]
+        },
+        "description": "Faz login e salva o token JWT na variável de coleção jwt_token."
+      }
+    },
+    {
+      "name": "03 - Login (credenciais invalidas)",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"admin\", \"password\": \"errada\"}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["login"]
+        },
+        "description": "Demonstra 401 com credenciais erradas."
+      }
+    },
+    {
+      "name": "04 - Profile (com token)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+        ],
+        "url": {
+          "raw": "http://localhost:3000/profile",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["profile"]
+        },
+        "description": "Acessa rota protegida com o token JWT. Execute '02 - Login' primeiro para preencher a variável jwt_token."
+      }
+    },
+    {
+      "name": "05 - Profile (sem token)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/profile",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["profile"]
+        },
+        "description": "Demonstra 401 ao acessar rota protegida sem token."
+      }
+    },
+    {
+      "name": "06 - CORS aberto",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Origin", "value": "https://meu-app.example.com"}
+        ],
+        "url": {
+          "raw": "http://localhost:3000/cors-test",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["cors-test"]
+        },
+        "description": "Responde com Access-Control-Allow-Origin: *. Observe os headers no ZAP."
+      }
+    },
+    {
+      "name": "07 - CORS bloqueado",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Origin", "value": "https://origem-nao-autorizada.example.com"}
+        ],
+        "url": {
+          "raw": "http://localhost:3000/cors-blocked",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["cors-blocked"]
+        },
+        "description": "CORS restrito. A resposta não tem Access-Control-Allow-Origin para origens não autorizadas."
+      }
+    },
+    {
+      "name": "08 - Resposta lenta (5s)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/slow",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["slow"]
+        },
+        "description": "Responde após 5 segundos. Observe o RTT no ZAP."
+      }
+    },
+    {
+      "name": "09 - JSON malformado",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/bad-json",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["bad-json"]
+        },
+        "description": "Retorna Content-Type: application/json mas com JSON inválido (vírgula extra). Observe o erro de parse."
+      }
+    },
+    {
+      "name": "10 - Content-Type errado",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/wrong-content-type",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["wrong-content-type"]
+        },
+        "description": "Retorna JSON com Content-Type: text/plain. Observe a discrepância no ZAP."
+      }
+    },
+    {
+      "name": "11 - Cache com ETag",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/cache-test",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["cache-test"]
+        },
+        "description": "Primeira chamada: retorna 200 com ETag e Cache-Control. Segunda chamada (duplicada abaixo): envie o ETag e observe o 304."
+      }
+    },
+    {
+      "name": "12 - Cache com ETag (304 Not Modified)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "If-None-Match", "value": "\"abc123-lab-etag\""}
+        ],
+        "url": {
+          "raw": "http://localhost:3000/cache-test",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["cache-test"]
+        },
+        "description": "Envia o ETag recebido anteriormente. Deve retornar 304 Not Modified (sem corpo)."
+      }
+    },
+    {
+      "name": "13 - Cookies com flags",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/set-cookie",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["set-cookie"]
+        },
+        "description": "Define tres cookies com flags diferentes. Observe os Set-Cookie no ZAP."
+      }
+    },
+    {
+      "name": "14 - Headers ausentes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/missing-headers",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["missing-headers"]
+        },
+        "description": "Resposta sem X-Content-Type-Options, X-Frame-Options, etc. Compare com outros endpoints no ZAP."
+      }
+    },
+    {
+      "name": "15 - Status 200",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/status/200",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["status", "200"]
+        }
+      }
+    },
+    {
+      "name": "16 - Status 400",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/status/400",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["status", "400"]
+        }
+      }
+    },
+    {
+      "name": "17 - Status 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/status/404",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["status", "404"]
+        }
+      }
+    },
+    {
+      "name": "18 - Status 429 (Rate Limit)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/status/429",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["status", "429"]
+        },
+        "description": "Simula Too Many Requests. Observe como o cliente deve tratar com retry + backoff."
+      }
+    },
+    {
+      "name": "19 - Status 500",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/status/500",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["status", "500"]
+        }
+      }
+    },
+    {
+      "name": "20 - Redirect 301",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/redirect",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["redirect"]
+        },
+        "description": "Retorna 301 redirecionando para /. Desative 'Automatically follow redirects' no Postman para ver o 301 no ZAP."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "jwt_token",
+      "value": "",
+      "description": "Token JWT obtido em POST /login. Preenchido automaticamente pelo script de test do request de Login."
+    }
+  ]
+}

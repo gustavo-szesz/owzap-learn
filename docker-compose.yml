@@ -1,0 +1,47 @@
+services:
+  # ─── API de exemplo ────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: owzap-api
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      JWT_SECRET: "${JWT_SECRET:-segredo-do-lab-nao-use-em-producao}"
+      JWT_EXPIRY: "${JWT_EXPIRY:-15m}"
+    restart: unless-stopped
+    networks:
+      - lab-net
+
+  # ─── OWASP ZAP ─────────────────────────────────────────────────────────────
+  # Interface web disponível em http://localhost:8080
+  # Proxy HTTP/S escuta em localhost:8090
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: owzap-zap
+    ports:
+      - "8080:8080"   # ZAP Web UI
+      - "8090:8090"   # Proxy HTTP/S
+    command: >
+      zap.sh -daemon
+      -host 0.0.0.0
+      -port 8080
+      -config api.disablekey=true
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+      -config proxy.ip=0.0.0.0
+      -config proxy.port=8090
+    volumes:
+      - zap-data:/zap/wrk
+    restart: unless-stopped
+    networks:
+      - lab-net
+
+volumes:
+  zap-data:
+
+networks:
+  lab-net:
+    driver: bridge
