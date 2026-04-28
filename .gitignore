@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+.npm
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# ZAP CA certificate (exportado localmente)
+zap-ca.cer
+owasp_zap_root_ca.cer
